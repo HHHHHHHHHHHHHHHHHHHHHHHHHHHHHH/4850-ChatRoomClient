@@ -49,7 +49,7 @@ public class Client {
 
                         send(line);
 
-                    } catch (Exception e) {
+                    } catch (IOException e) {
                     }
                 }
 
@@ -62,44 +62,51 @@ public class Client {
             public void run() {
                 while (true) {
                     try {
-                        String message = (String)messages.take();
+                        String message = (String) messages.take();
                         // Do some handling here...
-                        System.out.println("Client Received: " + message);
+                        //System.out.println("Client Received: " + message);
                         System.out.println(message);
-                        if ("Login success!".equals(message)) {
-                            login = true;
-
-                        } else if ("Login failed, please check you name and password.".equals(message)) {
-                            name = "";
-                            password = "";
-                        } //login success
-                        else if ("You should login first!".equals(message)) {
-                            name = "";
-                            password = "";
-                        } //other
-                        else if ("You send message to all in succeed.".equals(message)) {
-
-                        } else if ("You failed to send message to all.".equals(message)) {
-
-                        } //sendall message
-                        else if ("You send message in succeed.".equals(message)) {
-
-                        } //send someone message
-                        else if ("There is no this person or it is not in the room.".equals(message)) {
-
-                        } //someone send message
-                        else if ("You asked who is in the room.".equals(message)) {
-
-                        } //who
-                        else if ("You log out!".equals(message)) {
-                            name = "";
-                            password = "";
-                            login = false;
-                        } //logout
-                        else if ("You cannot login because the room can only contain 3 people.".equals(message)) {
-                            name = "";
-                            password = "";
-                            login = false;
+                        if (null != message) switch (message) {
+                            case "Login success!":
+                                login = true;
+                                break;
+                        //login success
+                            case "Login failed, please check you name and password.":
+                                name = "";
+                                password = "";
+                                break;
+                        //other
+                            case "You should login first!":
+                                name = "";
+                                password = "";
+                                break;
+                            case "You send message to all in succeed.":
+                                break;
+                        //sendall message
+                            case "You failed to send message to all.":
+                                break;
+                        //send someone message
+                            case "You send message in succeed.":
+                                break;
+                        //someone send message
+                            case "There is no this person or it is not in the room.":
+                                break;
+                        //who
+                            case "You asked who is in the room.":
+                                break;
+                        //logout
+                            case "You log out!":
+                                name = "";
+                                password = "";
+                                login = false;
+                                break;
+                            case "You cannot login because the room can only contain 3 people.":
+                                name = "";
+                                password = "";
+                                login = false;
+                                break;
+                            default:
+                                break;
                         }
                     } catch (InterruptedException e) {
                     }
@@ -130,7 +137,6 @@ public class Client {
                             Object obj = in.readObject();
                             messages.put(obj);
                         } catch (IOException e) {
-                            e.printStackTrace();
                         } catch (ClassNotFoundException | InterruptedException ex) {
                             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
                         }
