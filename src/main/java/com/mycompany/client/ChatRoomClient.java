@@ -13,11 +13,11 @@ import java.net.Inet4Address;
  * @author dh
  */
 public class ChatRoomClient {
+
     public static void main(String[] args) throws IOException {
-        String address=Inet4Address.getLocalHost().getHostAddress();
-        int port=14727;
-        Client client = new Client(address,port);
-        
-        
+        String address = Inet4Address.getLocalHost().getHostAddress();
+        int port = 14727;
+        Client client = new Client(address, port);
+
     }
 }
