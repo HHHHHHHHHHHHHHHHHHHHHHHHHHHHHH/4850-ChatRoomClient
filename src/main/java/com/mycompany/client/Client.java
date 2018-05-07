@@ -99,6 +99,7 @@ public class Client {
                                 name = "";
                                 password = "";
                                 login = false;
+                                System.exit(0);
                                 break;
                             case "You cannot login because the room can only contain 3 people.":
                                 name = "";
@@ -174,12 +175,12 @@ public class Client {
             obj = (String) obj + " " + this.name + " " + this.password;
 
         } else {
-            System.out.println("login = " + login);
-            System.out.println("You should log in first!");
+            
+            System.out.println("You should log in or sign up first!");
             return;
         }
 
-        System.out.println("Client send: " + obj);
+        //System.out.println("Client send: " + obj);
         server.write(obj);
     }
 }
