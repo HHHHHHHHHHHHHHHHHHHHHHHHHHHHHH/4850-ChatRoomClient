@@ -1,19 +1,35 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+/**
+ * Name: Ding Hao
+ * Date: 5/1/2018
+ * Description:
+ *     It is the client part of the ChatRoom Program. 
+ * Help: 
+ *     newuser username userpassword: create a new account
+ * 
+ *     login username userpassword: login an account with username and password
+ * 
+ *     send someone message: send message to someone
+ * 
+ *     send all: send everyone a message
+ * 
+ *     who: show you who are in this chatroom
+ * 
+ *     logout: logout from the account and close the client
+ * 
  */
 package com.mycompany.client;
 
-import java.io.BufferedReader;
+import java.net.Socket;
 import java.io.IOException;
+import java.io.BufferedReader;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.net.Socket;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
+
 
 /**
  *
@@ -21,9 +37,9 @@ import java.util.logging.Logger;
  */
 public class Client {
 
-    private final ConnectionToServer server;
+    private ConnectionToServer server;
     private LinkedBlockingQueue<Object> messages;
-    private final Socket socket;
+    private Socket socket;
     private String name;
     private String password;
     private boolean login;
@@ -32,93 +48,118 @@ public class Client {
         this.password = "";
         this.name = "";
         this.login = false;
+        socket = null;
+        server = null;
+        try{
         socket = new Socket(IPAddress, port);
         messages = new LinkedBlockingQueue<>();
         server = new ConnectionToServer(socket);
-
-        System.out.println("Dear client, input you shell, please.");
+        }
+        catch(IOException e){
+        }
+        
+       
+        
+        System.out.println("Input your shell, please.");
+        /**
+         * send shell to server
+         */
         Thread askThread = new Thread() {
             @Override
             public void run() {
+                String line="";
                 while (true) {
                     try {
                         InputStreamReader convert = new InputStreamReader(System.in);
                         BufferedReader stdin = new BufferedReader(convert);
-
-                        String line = stdin.readLine();
-
-                        send(line);
+                        line = stdin.readLine();
+                        
 
                     } catch (IOException e) {
                     }
+                    try {
+                        send(line);
+                    } catch (Exception e) {
+                        System.out.println("The server looks unconnected.");
+                        System.exit(0);
+                    }
+                    
                 }
 
             }
         };
         askThread.start();
 
+        /**
+         * different operitions after recieve results from server
+         */
         Thread messageHandling = new Thread() {
             @Override
             public void run() {
                 while (true) {
-                    try {
-                        String message = (String) messages.take();
-                        // Do some handling here...
-                        //System.out.println("Client Received: " + message);
-                        System.out.println(message);
-                        if (null != message) switch (message) {
-                            case "Login success!":
-                                login = true;
-                                break;
-                        //login success
-                            case "Login failed, please check you name and password.":
-                                name = "";
-                                password = "";
-                                break;
-                        //other
-                            case "You should login first!":
-                                name = "";
-                                password = "";
-                                break;
-                            case "You send message to all in succeed.":
-                                break;
-                        //sendall message
-                            case "You failed to send message to all.":
-                                break;
-                        //send someone message
-                            case "You send message in succeed.":
-                                break;
-                        //someone send message
-                            case "There is no this person or it is not in the room.":
-                                break;
-                        //who
-                            case "You asked who is in the room.":
-                                break;
-                        //logout
-                            case "You log out!":
-                                name = "";
-                                password = "";
-                                login = false;
-                                System.exit(0);
-                                break;
-                            case "You cannot login because the room can only contain 3 people.":
-                                name = "";
-                                password = "";
-                                login = false;
-                                break;
-                            default:
-                                break;
+                    try {String message="";
+                        try{
+                        message = (String) messages.take();
+                        }catch(InterruptedException e){
+                            continue;
                         }
-                    } catch (InterruptedException e) {
+                        System.out.println(message);
+                        if (null != message) {
+                            switch (message) {
+                                case "Login success!":
+                                    login = true;
+                                    break;
+                                //login success
+                                case "Login failed, please check you name and password.":
+                                    name = "";
+                                    password = "";
+                                    break;
+                                //other
+                                case "You should login first!":
+                                    name = "";
+                                    password = "";
+                                    break;
+                                case "You send message to all in succeed.":
+                                    break;
+                                //sendall message
+                                case "You failed to send message to all.":
+                                    break;
+                                //send someone message
+                                case "You send message in succeed.":
+                                    break;
+                                //someone send message
+                                case "There is no this person or it is not in the room.":
+                                    break;
+                                //who
+                                case "You asked who is in the room.":
+                                    break;
+                                //logout
+                                case "You log out!":
+                                    name = "";
+                                    password = "";
+                                    login = false;
+                                    break;
+                                case "You cannot login because the room can only contain 3 people.":
+                                    name = "";
+                                    password = "";
+                                    login = false;
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
+                    } catch (Exception e) {
+                        
                     }
                 }
             }
         };
 
-        //messageHandling.setDaemon(true);
         messageHandling.start();
     }
-
+/**
+ * connect to server
+ */
     private class ConnectionToServer {
 
         ObjectInputStream in;
@@ -157,10 +198,19 @@ public class Client {
         }
 
     }
-
+/**
+ * send shell to server
+ * if it is login or newuser, user should be logout, or he/she should be login.
+ * @param obj 
+ */
     public void send(Object obj) {
-        String[] buff = ((String) obj).split(" ");
-        //login user pwd 
+        String[] buff = stringGuide((String)obj);
+        if(buff==null)
+        {
+            System.out.println("Wrong input.");
+            return;
+        }
+        //login or newuser
         if ("login".equals(buff[0]) || "newuser".equals(buff[0])) {
 
             if (login == true) {
@@ -175,12 +225,52 @@ public class Client {
             obj = (String) obj + " " + this.name + " " + this.password;
 
         } else {
-            
+
             System.out.println("You should log in or sign up first!");
             return;
         }
 
-        //System.out.println("Client send: " + obj);
         server.write(obj);
     }
+    private String[] stringGuide(String str) {
+        String[] buff = str.split(" ");
+        switch (buff[0]) {
+            case "login":
+                if (buff.length != 3) {
+                    return null;
+                }
+                break;
+            case "sendall":
+                if (buff.length != 2) {
+                    return null;
+                }
+                break;
+            case "send":
+                if (buff.length != 3) {
+                    return null;
+                }
+                break;
+            case "who":
+                if (buff.length != 1) {
+                    return null;
+                }
+                break;
+            case "logout":
+                if (buff.length != 1) {
+                    return null;
+                }
+                break;
+            case "newuser":
+                if (buff.length != 3) {
+                    return null;
+                }
+                break;
+            default:
+                return null;
+
+        }
+
+        return buff;
+        }
+    
 }
